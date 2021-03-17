@@ -51,10 +51,12 @@ class TagsController @Inject()(cc: ControllerComponents, edContext: EdContext)
   }
 
 
-  def loadTagsAndStats: Action[Unit] = GetAction { request =>
+  // Break out to [CatsAndTagsController]?
+  def loadCatsAndTags: Action[Unit] = GetAction { request =>
     val tagsAndStats = request.dao.loadTagsAndStats()
     val isStaff = request.isStaff
-    OkSafeJson(JsonMaker.makeTagsStuffPatch(Json.obj(
+    val catsJsArr = ForumController.loadCatsJsArray(request)
+    OkSafeJson(JsonMaker.makeTagsStuffPatch(tagsJsObj = Json.obj(
       "tagsAndStats" -> JsArray(tagsAndStats.map(tagAndStats => {
         Json.obj(
           "label" -> tagAndStats.label,
@@ -63,16 +65,16 @@ class TagsController @Inject()(cc: ControllerComponents, edContext: EdContext)
           // Don't think everyone should know about this:
           "numSubscribers" -> (if (isStaff) tagAndStats.numSubscribers else JsNull),
           "numMuted" -> (if (isStaff) tagAndStats.numMuted else JsNull))
-      }))), globals.applicationVersion))
+      }))), catsJsArr = Some(catsJsArr), globals.applicationVersion))
   }
 
 
   def loadMyTagNotfLevels: Action[Unit] = GetAction { request =>
     val notfLevelsByTagLabel = request.dao.loadTagNotfLevels(request.theUserId, request.who)
-    OkSafeJson(JsonMaker.makeTagsStuffPatch(Json.obj(
+    OkSafeJson(JsonMaker.makeTagsStuffPatch(tagsJsObj = Json.obj(
       "myTagNotfLevels" -> JsObject(notfLevelsByTagLabel.toSeq.map({ labelAndLevel =>
         labelAndLevel._1 -> JsNumber(labelAndLevel._2.toInt)
-      }))), globals.applicationVersion))
+      }))), catsJsArr = None, globals.applicationVersion))
   }
 
 

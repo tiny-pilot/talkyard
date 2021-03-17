@@ -45,7 +45,9 @@ class SearchController @Inject()(cc: ControllerComponents, edContext: EdContext)
     * copy & paste search phrase urls in emails etc? Google uses 'q' not 'query' anyway.
     */
   def showSearchPage(q: Option[String]): Action[Unit] = AsyncGetAction { request =>
-    val htmlStr = views.html.templates.search(SiteTpi(request)).body
+    // Oops, this won't incl cats & tags.
+    val htmlStr = views.html.templates.search(
+          SiteTpi(request, inclCatsTagsSects = true)).body
     ViewPageController.addVolatileJsonAndPreventClickjacking2(htmlStr,
         unapprovedPostAuthorIds = Set.empty, request)
   }

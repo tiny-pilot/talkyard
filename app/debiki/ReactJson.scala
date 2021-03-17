@@ -424,7 +424,7 @@ class JsonMaker(dao: SiteDao) {
   }
 
 
-  def makeSpecialPageJson(request: DebikiRequest[_]): JsObject = {
+  def makeSpecialPageJson(request: DebikiRequest[_], inclCatsTagsSects: Bo): JsObject = {
     require(request.dao == dao, "TyE4JKTWQ0")
     val globals = request.context.globals
     val siteSettings = dao.getWholeSiteSettings()
@@ -456,6 +456,7 @@ class JsonMaker(dao: SiteDao) {
       "strangersWatchbar" -> makeStrangersWatcbarJson(),
       "pagesById" -> Json.obj(),
       // Special pages / the admin area don't need categories. [6TKQ20]
+      // But the search page do!
       "publicCategories" -> JsArray())
 
     result
@@ -2006,8 +2007,17 @@ object JsonMaker {
   }
 
 
-  def makeTagsStuffPatch(json: JsObject, appVersion: String): JsValue = {
-    makeStorePatch(Json.obj("tagsStuff" -> json), appVersion = appVersion)
+  def makeTagsStuffPatch(tagsJsObj: JsObject, catsJsArr: Opt[JsValue],
+          appVersion: St): JsValue = {
+    // We haven't checked which cats are public and which are access restricted,
+    // so just include all in the restrictedCategories list.
+    val arrOrNull =
+          if (catsJsArr.isDefined) JsArray(Nil)  // to enter an if [upd_store_cats_hack]
+          else JsNull
+    makeStorePatch(Json.obj(
+          "publicCategories" -> arrOrNull,
+          "restrictedCategories" -> catsJsArr,
+          "tagsStuff" -> tagsJsObj), appVersion = appVersion)
   }
 
 

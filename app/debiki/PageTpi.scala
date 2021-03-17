@@ -39,8 +39,9 @@ object PageTpi {
 
 object SiteTpi {
 
-  def apply(request: DebikiRequest[_], json: Option[String] = None,
-        pageTitleUnsafe: Option[String] = None, isAdminArea: Boolean = false) =
+  def apply(request: DebikiRequest[_], json: Opt[St] = None,
+        pageTitleUnsafe: Opt[St] = None, isAdminArea: Bo = false,
+        inclCatsTagsSects: Bo = false) =
     new SiteTpi(request, json, pageTitleUnsafe = pageTitleUnsafe, isAdminArea = isAdminArea)
 
 }
@@ -59,9 +60,10 @@ object SiteTpi {
   */
 class SiteTpi protected (
   val debikiRequest: DebikiRequest[_],
-  val json: Opt[St] = None,
+  val json: Opt[St] = None,  // RENAME to reactStoreSafeJsonString?
   pageTitleUnsafe: Opt[St] = None,
-  val isAdminArea: Bo = false) {
+  val isAdminArea: Bo = false,
+  inclCatsTagsSects: Bo = false) {
 
   def globals: Globals = debikiRequest.context.globals
 
@@ -317,7 +319,10 @@ class SiteTpi protected (
 
   /** The initial data in the React-Flux model, a.k.a. store. */
   def reactStoreSafeJsonString: String =
-    json getOrElse debikiRequest.dao.jsonMaker.makeSpecialPageJson(debikiRequest).toString()
+    json getOrElse {
+      debikiRequest.dao.jsonMaker.makeSpecialPageJson(
+            debikiRequest, inclCatsTagsSects = inclCatsTagsSects).toString()
+    }
 
 
   def assetUrl(fileName: String): String = assetUrlPrefix + fileName

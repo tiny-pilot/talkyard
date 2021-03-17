@@ -1427,7 +1427,9 @@ function patchTheStore(storePatch: StorePatch) {
     });
   }
 
-  if (storePatch.publicCategories) {
+  // CLEAN_UP do also if only restrictedCategories non-empty?
+  // Or maybe an allCats field?
+  if (storePatch.publicCategories) {   // [upd_store_cats_hack]
     dieIf(!storePatch.restrictedCategories, 'TyEK2WP49');
     // [redux] modifying the store in place, again.
     // Hmm what if the patch contains fever categories? Currently (2016-12), won't happen, though.

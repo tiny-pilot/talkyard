@@ -1990,8 +1990,8 @@ export function loadAllTags(success: (tags: string[]) => void) {
 }
 
 
-export function loadTagsAndStats() {
-  get('/-/load-tags-and-stats', r => ReactActions.patchTheStore(r));
+export function loadCatsAndTags(onDone?: () => Vo) {
+  get('/-/load-cats-and-tags', r => ReactActions.patchTheStore(r, onDone));
 }
 
 
