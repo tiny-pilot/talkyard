@@ -1662,7 +1662,8 @@ function makeTitle(topic: Topic, className: string, settings: SettingsVisibleCli
         : t.ft.TitleDone;
       iconClass = 'icon-check';
     }
-    else if (topic.pageRole === PageRole.Problem && topic.answerPostUniqueId) {
+    else if (page_isSolved(topic)) {
+    //else if (topic.pageRole === PageRole.Problem && topic.answerPostUniqueId) {
       // A problem with a solution post — similar to a question plus answer.
       // UX COULD use a "Problem solved" tooltip text instead of "Question ...".
       tooltip = t.d.TooltipQuestSolved;
