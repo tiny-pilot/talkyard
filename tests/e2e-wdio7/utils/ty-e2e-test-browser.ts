@@ -6083,6 +6083,8 @@ export class TyE2eTestBrowser {
       },
 
       waitForNumReplies: async (n: Partial<NumReplies>, ps: { skipWait?: Bo } = {}) => {
+        dieIf(!_.isObject(n),
+              `Pass an object, like: waitForNumReplies({ numNormal: 123 }), not just 123`);
         await this.switchToEmbCommentsIframeIfNeeded();
         if (!ps.skipWait) {
           await this.waitForMyDataAdded();
@@ -9441,7 +9443,7 @@ export class TyE2eTestBrowser {
         } */
       },
 
-      loginIfNeededViaMetabar: async (ps: NameAndPassword) => {
+      loginIfNeededViaMetabar: async (ps: NameAndPassword, clickPs?: WaitAndClickPs) => {
         await this.switchToEmbCommentsIframeIfNeeded();
         await this.waitForMyDataAdded();
         if (!await this.metabar.isLoggedIn()) {
@@ -9451,8 +9453,21 @@ export class TyE2eTestBrowser {
         }
       },
 
-      loginWithPasswordViaMetabar: async (ps: NameAndPassword) => {
-        await this.metabar.clickLogin();
+      loginWithPasswordViaMetabar: async (ps: NameAndPassword, clickPs?: WaitAndClickPs) => {
+        // [E2EBUG] [2_lgi_clk] Sometimes needs to click many times — if scrolling down
+        // to the bottom of a long blog post. Then, the first click might somehow fail.
+        // Probably related to scrolling somehow? (even with  maybeMoves: true  !)
+        const numWinsBefore: Nr = await this.numWindowsOpen();
+        let numWinsNow;
+        await this.waitUntil(async () => {
+          await this.metabar.clickLogin({ timeoutMs: 500, timeoutIsFine: true, ...clickPs });
+          numWinsNow = await this.numWindowsOpen();
+          return numWinsNow > numWinsBefore;
+        }, {
+          message: () => `Clicked Log In, but no login popup appeared? Then there'd be ${
+                numWinsBefore + 1} windows, but currently only: ${numWinsNow}. Trying again`,
+        });
+
         await this.loginDialog.loginWithPasswordInPopup(ps);
       },
 
