@@ -120,6 +120,48 @@ class ForumController @Inject()(cc: ControllerComponents, edContext: TyContext)
 
   def saveCategory: Action[JsValue] = AdminPostJsonAction(maxBytes = 5000) { request =>
     BUG // fairly harmless in this case: The lost update bug.
+    /* UX problem: Dupl cat name or slug causes 500 Int S Err:
+        Not user frinedly!
+
+org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "dw2_cats_page_slug__u"
+  Detail: Key (site_id, page_id, slug)=(1862, 1, general) already exists.
+        at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2440)
+        at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2183)
+        at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:308)
+        at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:441)
+        at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:365)
+        at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:150)
+        at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:127)
+        at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+        at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+        at com.debiki.dao.rdb.Rdb.execImpl(Rdb.scala:581)
+        at com.debiki.dao.rdb.Rdb.update(Rdb.scala:541)
+        at com.debiki.dao.rdb.RdbSiteTransaction.runUpdate(RdbSiteTransaction.scala:290)
+        at com.debiki.dao.rdb.RdbSiteTransaction.runUpdateSingleRow(RdbSiteTransaction.scala:295)
+        at com.debiki.dao.rdb.CategoriesSiteDaoMixin.insertCategoryMarkSectionPageStale(CategoriesSiteDaoMixin.scala:332)
+        at com.debiki.dao.rdb.CategoriesSiteDaoMixin.insertCategoryMarkSectionPageStale$(CategoriesSiteDaoMixin.scala:302)
+        at com.debiki.dao.rdb.RdbSiteTransaction.insertCategoryMarkSectionPageStale(RdbSiteTransaction.scala:38)
+        at debiki.dao.CategoriesDao.createCategoryImpl(CategoriesDao.scala:756)
+        at debiki.dao.CategoriesDao.createCategoryImpl$(CategoriesDao.scala:728)
+        at debiki.dao.SiteDao.createCategoryImpl(SiteDao.scala:112)
+        at debiki.dao.CategoriesDao.$anonfun$createCategory$1(CategoriesDao.scala:716)
+        at debiki.dao.SiteDao.$anonfun$writeTx$2(SiteDao.scala:251)
+        at debiki.dao.SiteDao.$anonfun$readWriteTransaction$2(SiteDao.scala:305)
+        at com.debiki.core.DbDao2.readWriteSiteTransaction(DbDao2.scala:67)
+        at debiki.dao.SiteDao.$anonfun$readWriteTransaction$1(SiteDao.scala:305)
+        at debiki.dao.SiteDao$.siteWriteLockIdImpl(SiteDao.scala:814)
+        at debiki.dao.SiteDao$.$anonfun$withSiteWriteLock$1(SiteDao.scala:803)
+        at debiki.dao.SystemDao$.withWholeDbReadLock(SystemDao.scala:859)
+        at debiki.dao.SiteDao$.withSiteWriteLock(SiteDao.scala:803)
+        at debiki.dao.SiteDao.readWriteTransaction(SiteDao.scala:304)
+        at debiki.dao.SiteDao.writeTx(SiteDao.scala:270)
+        at debiki.dao.SiteDao.writeTx(SiteDao.scala:239)
+        at debiki.dao.CategoriesDao.createCategory(CategoriesDao.scala:715)
+        at debiki.dao.CategoriesDao.createCategory$(CategoriesDao.scala:713)
+        at debiki.dao.SiteDao.createCategory(SiteDao.scala:112)
+        at controllers.ForumController.$anonfun$saveCategory$1(ForumController.scala:214)
+    */
+
     import request.{dao, body, requester}
     val categoryJson = (body \ "category").as[JsObject]
     val permissionsJson = (body \ "permissions").as[JsArray]
