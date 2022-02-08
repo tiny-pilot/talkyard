@@ -442,3 +442,30 @@ to users and groups?
 
 Summary: Group member titles, and user titles, would make sense, if there
 wasn't also group member badges and user badges. But one solution is enough.
+
+
+=== 3 logs: Debug, audit and event logs
+
+**Debug logs** include info of relevance to developers, and includes things
+both the _computer_ (source code) does, e.g. method requests, background jobs,
+failing over to another node. And includes if this was initiated by a human.
+Can be annoyingly detailed and noisy, for anyone not troubleshooting the
+computers.  Migth in the future get shipped off-site somehow?
+
+The **audit log** includse what *humans* did, and is nice to read, for
+auditors.  But it might include sensitive info, e.g. personal details — and so
+should not be used for e.g. sending webhooks events. Might in the future get
+shipped off-site somehow?
+
+The **event log** includes events of interest to the Talkyard users, e.g. for
+sending as webhooks. But it would be too sparse, to use for auditing or
+debugging. — It's part of the Ty application, and updates to the event log,
+might resul in new entries in the debug log.
+
+Then there are also **notifications**, which is almost like a log too, but they
+are per person, and can be marked as seen, by the person who got the
+notification. Whilst events are per Ty site.
+
+See e.g.:
+https://stackoverflow.com/questions/2492362/difference-in-auditing-and-logging
+

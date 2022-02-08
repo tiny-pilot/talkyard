@@ -361,6 +361,7 @@ GET   /-/list-api-secrets       controllers.ApiSecretsController.listApiSecrets
 POST  /-/create-api-secret      controllers.ApiSecretsController.createApiSecret
 POST  /-/delete-api-secrets     controllers.ApiSecretsController.deleteApiSecrets
 
+#GET   /-/events                 controllers.EventsController.apiV0_listEvents
 POST  /-/v0/upsert-user                  talkyard.server.authn.SsoAuthnController.apiV0_upsertUser
 POST  /-/v0/upsert-user-and-login        talkyard.server.authn.SsoAuthnController.apiV0_upsertUserAndLogin
 POST  /-/v0/upsert-user-get-login-secret talkyard.server.authn.SsoAuthnController.apiv0_upsertUserGenLoginSecret

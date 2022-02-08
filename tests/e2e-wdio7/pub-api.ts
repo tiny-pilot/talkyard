@@ -129,6 +129,9 @@ interface Participant_ {
 // The different things Search Queries and List Queries can find:
 
 type FindWhat =
+  // Info about  also be sent via webhoos (not yet impl)
+  'Events' |
+
   'Pages' |
 
   'Posts' |
