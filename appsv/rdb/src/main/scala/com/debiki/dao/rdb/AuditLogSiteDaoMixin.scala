@@ -142,14 +142,30 @@ trait AuditLogSiteDaoMixin extends SiteTransaction {
   }
 
 
-  def loadAuditLogEntriesRecentFirst(userId: UserId, tyype: Option[AuditLogEntryType], limit: Int,
-        inclForgotten: Boolean): immutable.Seq[AuditLogEntry] = {
+  def loadEventsFromAuditLog(newerOrAt: Opt[When], olderOrAt: Opt[When], limit: i32)
+        : immutable.Seq[AuditLogEntry] = {
+    loadAuditLogEntriesRecentFirst(userId = None, tyype = None,
+          newerOrAt = newerOrAt, olderOrAt = olderOrAt, newestFirst = false,
+          limit = limit, inclForgotten = true)
+  }
+
+
+  def loadAuditLogEntriesRecentFirst(userId: Opt[PatId], tyype: Opt[AuditLogEntryType],
+        newerOrAt: Opt[When], olderOrAt: Opt[When], newestFirst: Bo, limit: i32,
+        inclForgotten: Bo): immutable.Seq[AuditLogEntry] = {
     tyype foreach { t =>
       dieIf(t == AuditLogEntryType.NewPage, "EdE4WK023X", "Probably wants NewReply too")
       dieIf(t == AuditLogEntryType.NewReply, "EdE3ZCM238", "Probably wants NewPage too")
     }
 
     val values = ArrayBuffer(siteId.asAnyRef, userId.asAnyRef)
+
+    val andDoerIdIs = userId match {
+      case None => ""
+      case Some(uId) =>
+        values.append(uId.asAnyRef)
+        "and doer_id = ?"
+    }
 
     val andDidWhatEqType = tyype match {
       case None => ""
@@ -161,12 +177,31 @@ trait AuditLogSiteDaoMixin extends SiteTransaction {
     // Non-anonymized entries have forgotten = 0 (instead of 1, 2)
     val andSkipForgotten = inclForgotten ? "" | "and forgotten = 0"
 
+    val descOrAsc = if (newestFirst) "desc" else "asc"
+
+    val andNewerOrAt = newerOrAt match {
+      case None => ""
+      case Some(when) =>
+        values.append(when.asTimestamp)
+        "and done_at >= ?"
+    }
+
+    val andOlderOrAt = olderOrAt match {
+      case None => ""
+      case Some(when) =>
+        values.append(when.asTimestamp)
+        "and done_at<>= ?"
+    }
+
     val query = s"""
       select * from audit_log3
-      where site_id = ? and doer_id = ?
+      where site_id = ?
+      $andDoerIdIs
       $andDidWhatEqType
       $andSkipForgotten
-      order by done_at desc limit $limit
+      $andNewerOrAt
+      $andOlderOrAt
+      order by done_at $descOrAsc limit $limit
       """
 
     runQueryFindMany(query, values.toList, rs => {

@@ -45,6 +45,18 @@ object AuditLogEntryType {
   case object DeletePage extends AuditLogEntryType(9)
   case object UndeletePage extends AuditLogEntryType(10)
 
+  // Maybe there'll be an array with events, e.g. [PageClosed, PageAnswered]?
+  // (Since a page gets closed, once an answer has been selected.)
+  // But that could be a client side thing?
+  // Here, should be enough to store actiosn by the users.
+  case object PageClosed  extends AuditLogEntryType(101)
+  case object PageOpened  extends AuditLogEntryType(102)
+
+  case object PageAnswered  extends AuditLogEntryType(101)
+  case object PagePlanned  extends AuditLogEntryType(101)
+  case object PageStarted  extends AuditLogEntryType(101)
+  case object PageDone  extends AuditLogEntryType(101)
+
   // Let 1001-1999 be about people?
   case object CreateUser extends AuditLogEntryType(1001)
   // later ----

@@ -54,9 +54,10 @@ class ListController @Inject()(cc: ControllerComponents, edContext: TyContext)
           (listQueryJson \ "findWhat").as[St])  ; DEPRECATED
     val Pages = "Pages"
     val Posts = "Posts"
+    val Events = "Events"
 
-    throwUnimplementedIf(listWhat != Pages && listWhat != Posts,
-      "TyE3056KTM7", "'listWhat' must be 'Pages' or 'Posts' right now")
+    throwBadReqIf(listWhat != Pages && listWhat != Posts && listWhat != Events,
+      "TyE3056KTM7", "'listWhat' must be 'Pages' or 'Posts' or 'Events'")
 
     val lookWhere = (listQueryJson \ "lookWhere").asOpt[JsObject]
 
@@ -67,12 +68,15 @@ class ListController @Inject()(cc: ControllerComponents, edContext: TyContext)
     throwUnimplementedIf(lookInWhichCategories.size >= 2,
       "TyE205KDT53", "Currently at most one lookWhere.inCategories can be specified")
 
+    throwUnimplementedIf(lookInWhichCategories.nonEmpty && listWhat == Events,
+      "TyE205KDT54", "Currently lookWhere.inCategories not supported, for events")
+
     val anyCategoryRef = lookInWhichCategories.headOption
 
     val anyFilter = (listQueryJson \ "filter").asOpt[JsObject]
 
-    throwUnimplementedIf(anyFilter.isDefined && listWhat == Posts,
-          "TyE603MRD4", "No filters implemented for posts")
+    throwUnimplementedIf(anyFilter.isDefined && (listWhat == Posts || listWhat == Events),
+          "TyE603MRD4", "No filters implemented for posts and events")
 
     val (
       isAuthorWaitingFilter: Opt[Bo],
@@ -118,7 +122,9 @@ class ListController @Inject()(cc: ControllerComponents, edContext: TyContext)
         PageOrderOffset.ByScoreAndBumpTime(offset = None, TopTopicsPeriod.Week)
     }
 
-    //val limit = parseOptI32(listQueryJson, "limit")
+    val limitMax100: Opt[i32] = parseOptI32(listQueryJson, "limit")
+    val newerOrAt: Opt[When] = parseOptWhen(listQueryJson, "newerOrAt")
+    val olderOrAt: Opt[When] = parseOptWhen(listQueryJson, "olderOrAt")
 
     def nothingFound = ThingsFoundJson.makePagesFoundListResponse(Nil, dao, pretty)
 
@@ -144,6 +150,25 @@ class ListController @Inject()(cc: ControllerComponents, edContext: TyContext)
     lazy val authzCtx = dao.getForumAuthzContext(requester)
 
     listWhat match {
+      case Events =>
+        // Maybe break out to own file?
+        val events: ImmSeq[Event] = dao.readTx { tx =>
+          val limit = limitMax100 getOrElse 33
+          val auditLogItems: ImmSeq[AuditLogEntry] =
+                tx.loadEventsFromAuditLog(newerOrAt = newerOrAt, olderOrAt = olderOrAt,
+                      limit = limit)
+          auditLogItems.flatMap(Event.fromAuditLogItem)
+        }
+        def JsEvent(event: Event): JsObject = {
+          ???
+        }
+        val eventsJson = events map JsEvent
+        val siteIdsOrigins = dao.theSiteIdsOrigins()
+        import controllers.OkApiJson
+        OkApiJson(Json.obj(
+          "origin" -> siteIdsOrigins.siteOrigin,
+          "thingsFound" -> eventsJson), pretty)
+
       case Pages =>
         val pageQuery = PageQuery(pageSortOrder,
               PageFilter(PageFilterType.AllTopics, includeDeleted = false),

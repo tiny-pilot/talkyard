@@ -746,7 +746,13 @@ trait SiteTransaction {   RENAME // to SiteTx — already started with a type Si
   def loadCreatePostAuditLogEntry(postId: PostId): Option[AuditLogEntry]
   def loadCreatePostAuditLogEntriesBy(browserIdData: BrowserIdData, limit: Int, orderBy: OrderBy)
         : Seq[AuditLogEntry]
-  def loadAuditLogEntriesRecentFirst(userId: UserId, tyype: Option[AuditLogEntryType], limit: Int,
+
+  // For now. Later, own table?
+  def loadEventsFromAuditLog(newerOrAt: Opt[When], olderOrAt: Opt[When], limit: i32)
+        : immutable.Seq[AuditLogEntry]
+
+  def loadAuditLogEntriesRecentFirst(userId: Opt[PatId], tyype: Opt[AuditLogEntryType],
+        newerOrAt: Opt[When], olderOrAt: Opt[When], newestFirst: Bo, limit: i32,
         inclForgotten: Boolean): immutable.Seq[AuditLogEntry]
 
   def loadBlocks(ip: String, browserIdCookie: Option[String]): immutable.Seq[Block]

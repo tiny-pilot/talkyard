@@ -445,6 +445,8 @@ object JsonUtils {   MOVE // to talkyard.server.parser.JsonParSer
         throwBadJson("EsE2GKU8", s"'$fieldName' is not a boolean: " + errors.toString())
     }
 
+  def parseWhen(json: JsValue, fieldName: String): When =
+    readWhen((json, fieldName)
 
   def readWhen(json: JsValue, fieldName: String): When =
     When.fromDate(readDateMs(json, fieldName: String))
@@ -453,6 +455,8 @@ object JsonUtils {   MOVE // to talkyard.server.parser.JsonParSer
   def readWhenDay(json: JsValue, fieldName: String): WhenDay =
     WhenDay.fromDate(readDateMs(json, fieldName: String))
 
+  def parseOptWhen(json: JsValue, fieldName: String): Option[When] =
+    readOptWhen((json, fieldName)
 
   def readOptWhen(json: JsValue, fieldName: String): Option[When] =
     readOptDateMs(json, fieldName).map(When.fromDate)
